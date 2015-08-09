@@ -1,0 +1,197 @@
+                   
+5
+"namespaces/test/classTest.cft" include 
+decimal
+Int Class DLLNode
+
+"DLLNodeAlloc" class :{ DLLNode nodes [ 32 ] };
+
+"testna" DLLNodeAlloc new
+"DLLNode size = " prints DLLNode size @ Io.print nl 
+"DLLNodeAlloc size = " prints DLLNodeAlloc size @ Io.print nl 
+
+testna.nodes [ 1 2 + ].AfterReference  1 =
+testna.nodes [ 2 ].BeforeReference  2 =
+testna 48 dump
+testna.nodes [ 3 ].AfterReference @ 1 _assert
+
+"DLLNodeAlloc4" class :{ DLLNode nodes [ 32 ] [ 4 ] };
+"DLLNodeAlloc4 size = " prints DLLNodeAlloc4 size @ Io.print nl 
+"testna4" DLLNodeAlloc new
+
+: testna5
+    testna4.nodes [ 1 ] [ 0 ].AfterReference  1 =
+    testna4.nodes [ 1 ] [ 0 ].BeforeReference  2 =
+    testna4.nodes [ 1 ] [ 0 ] 32 dump
+    testna4.nodes [ 2 ] [ 1 ].AfterReference  1 =
+    testna4.nodes [ 2 ] [ 1 ].BeforeReference  2 =
+    testna4.nodes [ 2 ] [ 1 ] 32 dump
+    testna4.nodes [ 3 ] [ 2 ].AfterReference  1 =
+    testna4.nodes [ 3 ] [ 2 ].BeforeReference  2 =
+    testna4.nodes [ 3 ] [ 2 ] 32 dump
+;
+' testna5 wdiss
+testna5
+testna4.nodes [ 3 ] [ 2 ].BeforeReference @ 2 _assert
+
+"testna2" DLLNodeAlloc new 
+: tna
+	testna2.nodes [ 1 ].AfterReference 1 = 
+	testna2.nodes [ 1 ]. BeforeReference 2 = 
+	testna2 32 dump 
+;
+' tna wdiss
+tna
+testna2.nodes[1].AfterReference @ 1 _assert
+testna2.nodes[1].BeforeReference @ 2 _assert
+
+C
+: tna2 ( objPtr ) 
+        "tna2" ps nl
+        objPtr @ nl hp nl
+        objPtr . nodes [ 2 ].AfterReference 1 =
+	objPtr . nodes [ 2 ].BeforeReference 2 =
+	objPtr @ 32 dump
+;
+
+: tna2a ( objPtr ) 
+        "tna2a" ps nl
+	objPtr . nodes [ 2 ].AfterReference 1 =
+	objPtr . nodes [ 2 ].BeforeReference 2 =
+	objPtr @ 32 dump
+;
+"testn4" DLLNodeAlloc new
+testn4 tna2a 
+testn4.nodes[2].AfterReference @ 1 _assert
+testn4.nodes[2].BeforeReference @ 2 _assert
+s
+
+: tna3 ( testn4 )
+        "tna3" ps
+	testn4.nodes [ 2 ].AfterReference 1 =
+	testn4.nodes [ 2 ].BeforeReference 2 =
+	testn4 @ 32 dump
+;
+
+"testn5" new
+testn5 tna3
+
+testn5 hp
+testn5 tna2
+
+: tnax1 ( objPtr ) // "tnax1 pushed" ps nl
+        objPtr @ nl hp nl
+	objPtr.nodes[3].AfterReference 1 =
+	objPtr.nodes[4].BeforeReference 2 =
+	objPtr @ 32 dump
+;
+' tnax1 wdiss
+
+"testnx" DLLNodeAlloc new testnx tnax1
+decimal
+"Ar1" class :{ int32 ar [4] };
+"a1" Ar1 new
+"a1 : " ps location a1 16 dump
+a1.ar [ 3 ] 89 =
+a1.ar[0] a1.ar[3] @ = 
+a1.ar[0] @ 89 _assert
+"a1 : " ps location a1 16 dump
+: a2 ( Ar1 a ) 
+    a.ar[1] a.ar[3] @ = 
+    a.ar[1] @ dup p 89 _assert 
+;
+' a2 wdiss
+a1 a2 
+"a1 : " ps location a1 16 dump
+: a3 ( n Ar1 a ) 
+    a.ar[n @ 1 +] a.ar[n @ 2 +] @ = 
+    a.ar[n @ 1 +] @ dup p 89 _assert 
+;
+' a3 wdiss
+1 a1 a3
+a1.ar[2] @ 89 _assert
+
+"Ar2" class :{ int32 ar [4][4] };
+"a4" Ar2 new
+"a4 : " ps location a4 64 dump
+a4.ar[3][2]  89 =
+"a4 : " ps location a4 64 dump
+: a5 ( n m Ar2 a ) 
+    a.ar[n @ 1 +][m @] a.ar[n @ 2 +][m @] @ = 
+    nl "a4 : " ps location a @ 64 dump
+    a.ar[n @ 1 +][m @] @ dup p 89 s _assert 
+;
+' a5 wdiss
+a4.ar[3][2] @ 89 _assert
+1 2 a4 a5
+// a5 ( 1, 2, a4 )
+"a4 : " ps location a4 64 dump
+
+"Ar3" class :{ int32 ar [3][3][2] };
+"a6" Ar3 new
+"a6 : " ps location a6 72 dump
+a6.ar[2][2][1]  89 =
+a6.ar[2][2][1] @ 89 _assert
+"a6 : " ps location a6 72 dump
+a6.ar[1][2][1] a6.ar[2][2][1] @ = 
+nl "a6 : " ps location a6 72 dump
+a6.ar[1][2][1] @ dup p 89 s _assert 
+a6.ar[1][2][1] 0 = 
+a6.ar[1][2][1] @ dup p 0 s _assert 
+nl "a6 : " ps location a6 72 dump
+: a8 ( Ar3 a ) 
+    a.ar[1][2][1] a.ar[2][2][1] @ = 
+    nl "a8.a : " ps location a @ 72 dump
+    a.ar[1][2][1] @ dup p 89 s _assert 
+    a.ar[2][2][1] @ dup p 89 s _assert 
+;
+' a8 wdiss
+a6 a8
+: a7 ( n m o Ar3 a ) 
+    a.ar[n @ 1 +][m @][o @] a.ar[n @ 2 +][m @][o @] @ = 
+    nl "a7.a : " ps location a @ 72 dump
+    // a.ar[n @ 2 +][m @][o @] @ dup p 89 s _assert 
+    a.ar[n @ 1 +][m @][o @] @ dup p 89 s _assert 
+;
+' a7 wdiss
+a6.ar[2][2][1] @ 89 _assert
+0 2 1 a6 a7
+// a7(0,2,1,a6)
+"a6 : " ps location a6 72 dump
+"Ar9" class :{ byte ar [256][256][256] };
+: adump ( x y z Ar9 a )
+    nl "a8 : " ps 
+    location 
+    ": x =" ps x @ p 
+    "y =" ps y @ p 
+    "z =" ps z @ p nl 
+    a.ar [x @][y @ ][z @] 256 dump
+    // a.ar [x @][y @ ][z @] @ p
+;;
+: a9 ( Ar9 a | x y z )
+    x 0 = y 0 = z 0 =  
+    { z @ 256 < }
+    {
+        { y @ 256 < }
+        {
+            { x @ 256 < }
+            {
+                a.ar [x @][y @][z @] x @ = 
+                x ++ 
+            }
+            while 
+            x 0 =
+            adump ( x @, y @, z @, a.ar )
+            y ++ 
+        }
+        while
+        z ++ 
+        x 0 =
+        y 0 =
+    }
+    while
+;
+' a9 wdiss
+// "a10" Ar9 new a10 a9
+
+2 + 7 assertStkChk // stack checking

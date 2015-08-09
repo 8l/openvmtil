@@ -1,0 +1,287 @@
+5  // for stack checking see last lines
+//"C_Combinators" notUsing
+Root 
+"User" namespace 
+User
+#if 1
+: _SMN_ "StartupMacros" ;                           // _SMN_ : string macros namespace 
+"StartupMacros" namespace                           // create a namespace for string macros to be used 
+StartupMacros                                       // switch to that namespace
+: Delimiters "/" ;                                  // set delimiters to be used with string macros
+// "_startDirectory_" variable                      // created and set in CfrTil_ResetAll_Init
+: namespaces _startDirectory_ @ ;                   // this line also works in place of the next line
+                                                    // '_startDirectory_' is a variable created in the function 
+                                                    // CfrTil_ResetAll_Init in the file init.c
+//: namespaces "/usr/local/lib/cfrTil/namespaces" ; // our currently only ?!overloaded!? string macro allowing 
+                                                    // us to parameterize the startup; can be properly started 
+                                                    // in any directory now if it is installed with 'make install' 
+                                                    // in "/usr/local/lib/cfrTil"
+// stringMacrosOn                                   // turn on the macros; doesn't work if not initialized like eg. above initialization
+                                                    // nb. we don't turn it on here until line 254
+// stringMacrosOff                                  // turn off the macros
+#endif
+Lexer User 
+
+// nb. there is still some (alot of) old junk here and especially in the test files ...
+// echoOn
+// verbosity 1 = 
+optimizeOn inlineOn
+autoVarOff
+Debug
+"DebugFlag" variable
+DebugFlag 0 =
+
+Compiler 
+// nb : .'"[] : these five characters - dot, tick, quote left bracket, right bracket - .'"[] - are character macros including the brackets
+// set up some traditional Forth words from internal primitives
+// core internal c defined words : begin _end token _tick _immediate definition compile constant variable alias compileModeOn wordInit wordAdd wordFinish
+"immediate" ' _immediate alias _immediate
+"compileWord" ' _compileWord alias immediate
+"compileCall" ' _compileCall alias immediate
+"swap" ' _swap alias immediate
+"{" ' begin alias immediate keyword
+"end" ' _end alias immediate
+"}" ' _end alias immediate keyword
+"xt@" ' definition alias immediate
+"_semi" create { xt! dup wordAdd wordFinish compileModeOff } xt! dup wordAdd wordFinish 
+: word swap create swap _semi ;
+":" { compileModeOn sourceCodeInit token create begin } word // begin is not an immediate word; wordInit hooks into the debug/source code system
+"semi" create { _end _semi } _semi 
+";" ' semi alias immediate
+: tick token _tick ;
+// : ' token _tick ; immediate
+: ' token find ; immediate
+
+C
+"typedef" ' type alias
+: ;; semi _prefix ; immediate
+c_syntaxOn
+type int ; int.size = 4 ;
+type void ; void.size = 0 ;
+type char ; char.size = 1 ;
+type long ; long.size = 8 ;
+type quad ; quad.size = 16 ;
+c_syntaxOff
+//using pause
+
+// aliases
+Debug
+: vck ( n w ) { verbosity @ n @ > } { w @ wordRun drop } if2 ;
+"dbg" ' _dbg alias immediate debugWord
+"dbrk" ' <dbg> alias debugWord
+"locals" ' localsShow alias
+"regs" ' cpuStateShow alias
+User
+"const" ' constant alias
+"ifElse" ' tf3 alias immediate
+"var" ' variable alias
+"wdis" ' wordDisassemble alias
+Compiler 
+: var: { token dup ";" strcmp } { var } while drop ; immediate // nb : no quotation marks around names
+var: DebugFlag classTestRead streamLine doInit1 doDemo doTest doLisp _classTest_ COMBINATOR_TOOKIT doLisp testing testLisp _Maru_ x ; 
+// "Preprocessor" class
+Namespace
+: using: { token dup ";" strcmp } { usingFirst } while drop ; // eg - "using: User Lisp ;"
+: notUsing: { token dup ";" strcmp } { notUsing } while drop ; 
+: usingLast: { token dup ";" strcmp } { usingLast } while drop ; 
+notUsing: C_Combinators C_Syntax Lisp ;
+//using pause
+
+System
+"Black" 0 const
+"Red" 1 const
+"Green" 2 const
+"Yellow" 3 const
+"Blue" 4 const
+"Magenta" 5 const
+"Cyan" 6 const
+"White" 7 const
+"Default" 9 const
+: netbeans Blue Default setDebugColors ;
+: nnb Blue Black setDebugColors ;
+netbeans
+// nnb
+
+Debug
+// make immediate/word immediate - compile time versions of some words
+// : d: _dbg ; immediate debugWord // a debugWord has special behavior : doesn't interfere with optimization
+: s stack ; debugWord immediate
+: si stackInit ;
+: dcm decimal ; immediate // a non hex interpreted word
+: iun using stack namespaceTree ; immediate
+
+Root 
+: ri restartInit ;
+: q quit ;
+System
+"true" 1 const
+"false" 0 const
+"T" 1 const
+"F" 0 const
+Io
+: _ps printString ; inline
+: ps space _ps ;
+: prints _ps ;
+: pn intPrint ;
+: _p intPrint ;
+: p space intPrint ;
+: hp hex p ;
+: print space intPrint ;
+Compiler // ?? why do we need to repeat Compiler here else ' will be seen as Lisp.'
+
+"nl" ' newline alias keyword
+: _logWrite "cfrTil.log" logWrite ;
+: _logAppend "cfrTil.log" logAppend ;
+C
+: logWrite ( str ) _logWrite nl str @ ps nl ;
+: logAppend ( str ) _logAppend nl str @ ps nl ;
+
+// : cpcs ( str n ) nl str ps n @ p nl ; inline
+Word 
+: code definition ;
+
+Combinators
+"ix" ' call alias immediate
+"qEval" ' call alias immediate
+"ifte" ' tf3 alias
+"ifElse" ' tf3 alias
+
+C
+System
+: location filename ps space decimal lineNumber _p "." _ps charNumber _p ;
+: pdl  "-----------------------------" ps ;
+: pel  "=============================" ps ;
+: _source ( addToHistoryFlag  pword )
+    { addToHistoryFlag @ } { pword @ sourceAdd } { pword @ sourceDontAdd } ifElse 
+;;
+: _wdiss ( addToHistoryFlag pword ) 
+    nl pel 
+    nl "::> 'wdiss' is being called at" _ps location "<::" ps
+    _source ( addToHistoryFlag @ pword @ ) pdl 
+    pword @ code wdis 
+    "Word :" _ps hex pword p ":: Compiled at :" ps pword @ definition p 
+    nl pel nl decimal 
+;; 
+//: wdiss ( pword ) _wdiss ( 1 pword @ ) ; debugWord    // add wdiss words to history list
+: wdiss ( pword ) _wdiss ( 0 pword @ ) ; debugWord      // don't add wdiss words to history list
+"winfo" ' wdiss alias
+// ' wdiss wdiss
+: sys mem namespaces words stack using in ; 
+: all allWords ;
+: ri restartInit ;
+: stk stack ; debugWord 
+: ti timerInit ;
+: ahalt stop ;
+: _assert ( n m ) { n @ m @ != } { nl nl tab alertColors "Error! :: " ps debugColors location  _info ahalt } { { DebugFlag @ } { nl "_asert :" ps n @ p m @ p "ok : " ps location nl } if } ifElse ; 
+: _assertStkChk ( n m | str )  
+    { DebugFlag @ } 
+    { 
+        debugColors
+        // nl
+        str "Stack check" = 
+        { n @ m @ == }
+        { location ":" ps str @ ps "ok" ps nl } 
+        // { debugColors tab nl location ":" ps str @ ps alertColors "error!" ps stack _info nl defaultColors pause } 
+        { tab nl location ":" ps str @ ps alertColors "Error!" ps stack _info nl pause } 
+        ifElse 
+        defaultColors 
+        // dbg 
+    } 
+    { n @ m @ _assert }
+    ifElse
+; 
+: assertStkChk _assertStkChk ; // s ;
+// ' _assertStkChk winfo // pause
+: vb ( n ) verbosity n @ = ; : vb3 3 vb ; : vb2 2 vb ; : vb1 1 vb ; : vb0 0 vb ;
+: sOff vb1 inlineOff optimizeOff ;
+: sOn vb3 inlineOn optimizeOn ;
+"ahOn" ' addToHistoryOn alias
+"ahOff" ' addToHistoryOff alias
+: adps ( s ) alertColors s @ ps defaultColors ;
+: ddps ( s ) debugColors s @ ps defaultColors ;
+: _assert1 ( n m str ) { n @ m @ != } { str @ ps "error" ps _info ahalt } if ;
+: assert1 ( n m str ) { n @ m @ != } { nl str @ ps ":>" ps n @ p "!=" ps m @ p "<:" ps "Error!" adps _info ahalt } { str @ ps "ok\n" ps } ifElse ;
+: assert1s ( s1 s2 str ) { s1 @ s2 @ strcmp } { nl str @ ps "error" ps _info ahalt } if ;
+: _assert2 ( n m str ) { n @ m @ == } { str @ ps "ok" ps nl } { str @ ps "error" ps _info ahalt } ifElse ; 
+: assert2 ( n m str ) { n @ m @ == } { nl str @ ps "ok" ps nl } { nl str @ ps "error" ps _info ahalt } ifElse ;
+: assert0 ( n m ) { n @ m @ != } { nl "error" ps _info ahalt } if ; 
+"assert" ' assert1 alias
+: TODO ( str ) nl pdl nl str @ adps location nl pdl nl nl ;;
+"getESP" ' rsp alias
+
+Root
+"User" namespace
+User
+: opOff optimizeOff inlineOff state ;
+: opOn1 optimizeOn inlineOn { verbosity @ 1 > } { state } if ;
+// ' opOn1 wdiss
+: opOn 
+    optimizeOn inlineOn 
+    1 ' state literal vck  
+;
+// ' opOn @ winfo
+opOn
+"s" ' stack alias
+// : s stack location pause ;
+// : s stack dbg ;
+"istring" ' interpretString alias
+"def" ' word alias
+":rec" ' :recursive alias
+"rec;" ' recursive; alias 
+Compiler
+">;" ' >? alias
+
+Root C
+"allot" ' allocateMem alias
+// : include location s include location s pause ;
+// : include location nl include ;
+: include include debugColors "location :" ps location nl defaultColors ;
+: pause nl "pausing at :" ddps location nl pause ;
+Debug
+#if ( DebugFlag @ )
+: s stack alertColors location defaultColors ;
+// : s stack alertColors location defaultColors ;
+// : include 1 timerInit info stack include stack 1 time ; 
+// : include include stack ;
+// : include ( f ) vb3 alertColors decimal nl location nl "Entering : " ps f @ ps nl s f @ include defaultColors ;
+: include include debugColors "location :" ps location nl defaultColors ;
+vb3
+#endif
+: ds: stack _d: ; debugWord
+OpenVmTil
+
+: vmem ( | vbsty ) 
+    vbsty verbosity @ = 
+    verbosity 3 = 
+    mem 
+    verbosity vbsty @ = 
+;
+"C_Syntax" notUsing
+User
+
+
+#if verbosity @ 0 > // this conditional allows scripts to not see any startup or testing
+// : pause noop ;
+: assertStkChk assertStkChk s ; 
+stringMacrosOn
+: test "namespaces/init.cft" include ;
+test
+stringMacrosOff
+// demo
+
+"Lisp" notUsing
+User
+
+#if 1
+5
+testX
+printf("\n%s\n\n","hello world!")//parse this!
+tpf
+// demo
+2 + 7 assertStkChk // stack checking
+#endif
+
+#endif
+
+
+2 + 7 assertStkChk // stack checking

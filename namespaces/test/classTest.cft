@@ -1,0 +1,100 @@
+
+
+5
+#if ( _classTest_ ++ @ 2 < ) // prevent including twice
+Root Int Logic C
+ 
+hex
+Class
+"Pointer" class Pointer.size 4 = // 'size' must be declared else it remains 0; if a :{ ... }; class declaration doesn't immediately follow the class declaration
+Class // "class" works like "namespace" so here we switch back to namespace 'Class' else following words would be in class 'Pointer'
+"Integer" namespace // Integer.size 4 = doesn't work because a namespace doesn't have 'size' and 'this' variables automatically created
+"int16" class int16 size 2 = // 'size' must be declared else it remains 0; ( see above note )
+Integer "int32" class int32.size 4 = // 'size' must be declared else it remains 0; ( see above note )
+Integer "int64" class int64 size 8 = // 'size' must be declared else it remains 0; ( see above note )
+decimal
+Integer
+Pointer size @ nl "Pointer.size = " prints print nl
+Integer size @ nl "Integer size = " prints print nl
+int16 size @ nl "int16 size = " prints print nl
+Integer "byte" class
+byte size 1 =
+byte size @ nl "byte size = " prints print nl
+
+Class
+"DLLNode" class
+:{ // comment
+	Pointer AfterReference   // semicolon is optional and ignored when parsing class code
+	Pointer BeforeReference ;
+};
+DLLNode size @ nl "DLLNode size = " prints Io.print nl
+:{ // comment
+	Pointer AfterReference   // semicolon is optional and ignored when parsing class code
+        int16   someJunkForTesting ; // u can reset the structure representing the class
+	Pointer BeforeReference ;
+};
+DLLNode.size @ nl "DLLNode size = " prints Io.print nl
+using
+:{ // // again reset the structure representing the class
+	Pointer AfterReference   // semicolon is optional and ignored when parsing class code
+	Pointer BeforeReference ;
+};
+DLLNode.size @ nl "DLLNode size = " prints Io.print nl
+
+"testNode" DLLNode new 
+testNode.AfterReference 1 =
+testNode.BeforeReference 2 =
+testNode.size @ dump
+DLLNode
+
+"DLList" class
+:{
+    DLLNode HeadNode ;
+    DLLNode TailNode ;
+};
+
+#if 1
+: init ( this )
+    this.HeadNode.AfterReference  this.TailNode.BeforeReference =
+    this.TailNode.BeforeReference this.HeadNode.AfterReference =
+    this.HeadNode.BeforeReference 1 =
+    this.TailNode.AfterReference  2 =
+;
+#else
+: init ( REG: this )
+    this.HeadNode.AfterReference  this.TailNode.BeforeReference =
+    this.TailNode.BeforeReference   this.HeadNode.AfterReference =
+    this.HeadNode.BeforeReference 1 =
+    this.TailNode.AfterReference  2 =
+;
+#endif
+' init wdiss
+
+"testList" DLList new 
+testList DLList.size @ dump 
+
+this.HeadNode.AfterReference @ this.TailNode.BeforeReference  "class init test : " assert
+
+DLList
+using
+"DLListClone" clone // clones DLList class
++:{
+	int32 Category ;
+	Pointer Prototype ;
+}; // add two elements
+: init ( this )
+        this.Category 7 =
+	this.Prototype 7 =
+;
+' init wdiss
+
+"testClone" DLListClone new
+testClone DLListClone.size @ dump
+decimal nl "DLListClone size =" ps DLListClone size @ dup p nl 24 "Clone size" assert
+testClone.TailNode.BeforeReference @ testClone "DLListClone init test : " assert
+this.TailNode.BeforeReference @ this "DLListClone init test : " assert
+
+#endif
+2 + 7 assertStkChk // stack checking
+
+

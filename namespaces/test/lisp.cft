@@ -1,0 +1,114 @@
+
+"\nstarting lisp.cft\n" ddps
+5
+Lisp
+"/\" Compiler.' lambda alias
+(+ 1 6) nl
+'( 1 2 ( 3 4 ) 5 6 ( 7 ( 8 ( 9 ) 10 11 ) ( ( ( ( 12 ) ) 121 ) ) 13 ( 14 ) ) 15 ( 16 ( 17 ( 18 ) ) ) ) nl
+(+ 1 6) ( - ( + 1 2 ( * 3 4 ) ( / 4 2 ) ( - 9 8 ) 10 770 ) 21 )  // == 777
+( define f ( lambda x ( + x 1 ) ) ) ( f 6 )
+( begin ( define f ( lambda ( x ) ( + x 1 ) ) ) ( f 6 ) )
+( + 1 2 4 )
+( - ( + 1 2 ( * 3 4 ) ( / 4 2 ) ( - 9 8 ) 10 770 ) 21 )  // == 777 
+( ( /\ x y ( + x y ) ) 3 4 )
+( ( /\ ( x y z ) ( + x y z ) ) 3 4 70 ) // 77
+( ( /\ ( x y z ) ( + x y z ) ) 3 4 70 ) 
+( ( /\ ( x y z ) ( + x y z ) ) 3 4 70 ) 
+( ( /\ ( x y z ) ( + x y z ) ) 3 4 70 ) 
+( ( /\ ( x y z ) ( + x y z ) ) 3 4 70 ) // 77 
+nl
+( ( /\ ( x y z ) ( + x y z ) ) ((/\ (x y) (+ x y)) 3 4) ((/\ (x y) (+ x y)) 50 10 ) ((/\ (x y) (+ x y)) 8 2 ) )  // 77
+( ( /\ ( x y z ) ( + x y z ) ) ((/\ (x y) (/ x y)) 70 10) ((/\ (x y) (- x y)) 93 33 ) ((/\ (x y) (+ x y)) 8 2 ) )  // 77
+nl
+( define x 7 )
+( begin ( define x 2 ) ( + x 5 ) ( define x 14 ) ( / x 2 ) )
+( begin ( define f0 ( /\ (x) ( + x 1 ) ) ) ( f0 6 ) )
+( define f1 ( /\ (z) ( + z 1 ) ) ) 
+Compiler.' f1 wdiss
+( f1 6 )
+( begin ( define f2 ( /\ ( x ) ( + x 3 ) ) ) ( f2 4 ) )
+( begin ( define f3 ( /\ ( x ) ( + x 2 ) ) ) ( f3 5 ) )
+( define f4 ( /\ ( x ) ( - x 2 ) ) )
+(set zs1 77 abc 7 )
+(f4 (f3 zs1) ) 
+(quote zs1)
+( cond 1 7 0 )
+( cond 0 0 7 )
+( cond ( + 1 1 ) (+ 1 6 ) (+ 1 2 ) )
+( cond ( + 0 0 ) ( + 1 2 ) ( + 0 0 ) ( + 1 2 ) ( + 0 0 ) ( + 1 2 ) (+ 1 6 ) )
+( cond ( + 0 0 ) ( + 1 0 ) (+ 0 0 ) (+ 1 5 ) 7 )
+(define g ( /\ (a b c) (a b c) ) )
+(define h ( /\ (a b c) (a c b) ) ) 
+Compiler.' g wdiss
+nl
+(g + 3 4 ) (g / 14 2 ) 
+( h - 4 5 ) ( h - 5 4 ) ( h - 6 4 ) ( h / 9 3 ) ( h / 3 9 ) 
+nl
+((/\ (x) (+ x 1)) 6 ) ((/\ (x) (+ x 1)) ((/\ (y) (+ y 2)) 4 ) )
+// pause
+nl
+( g + ( g + 1 2 ) ( g + 2 2 ) ) 
+( g + ( g * ( g + 3 4 ) ( g + (h - (h - 4 8) 8) 5 ) ) 14 )
+( + ( h + 10 5 ) ( g + 7 ( + 3 (g + 4 5) 5) ) ( g + 7 31 ) ) 
+// pause
+(define pd +) (pd 1 2 4)
+// pause
+BigFloat
+nl ( h - 4 5 ) ( h - 5 4 ) ( h - 6 4 ) ( h / 9 3 ) ( h / 3 9 ) 
+( g + ( g - 8 5 ) ( g + 1 3 ) ) 
+( h + ( g - 5 8 ) ( g + 3 7 ) ) 
+// pause
+"BigFloat" notUsing
+Lisp
+using
+(define a 3) (define b 4)
+' ( a b 1 2 )
+nl
+(define x ( a b 1 2 )) 
+nl
+`( 'x x ,x ,@x ) 
+nl
+(define x '( a b 1 2 ))
+`( 'x x ,x ,@x ) 
+nl
+(set x '( a b 1 2 ))
+`( 'x x ,x ,@x ) 
+nl
+(set x ( a b 1 2 ))
+`( 'x x ,x ,@x ) 
+nl
+(define y `( 'x x ,x ,@x ) )
+`( 'y y ,y ,@y ) 
+// pause
+location "\nlisp test\n" ddps
+Lisp 
+(define a 3) (define b 4) nl
+(define y ( a b 1 2 )) nl
+(define x (7 8 9) ) nl
+(define y ( 1 2 a b 5 6 )) nl 
+nl
+(y) nl (x) nl 
+`( 'x x ,x ,@x ) nl
+// pause 
+'( 1 2 ( 3 4 ) 5 6 ( 7 ( 8 ( 9 ) 10 11 ) ( ( ( ( 12 ) ) 121 ) ) 13 ( 14 ) ) 15 ( 16 ( 17 ( 18 ) ) ) ) nl
+( 1 2 ( 3 4 ) 5 6 ( 7 ( 8 ( 9 ) 10 11 ) ( ( ( ( 12 ) ) ) ) 13 ( 14 ) ) 15 ( 16 ( 17 ( 18 ) ) ) ) nl
+// tL
+#endif
+((/\ (x) (+ x 1)) 6 ) ((/\ (x) (+ x 1)) ((/\ (y) (+ y 2)) 4 ) )
+(define x (7 8 9 45))
+nl (list 1 2 3 `x) 
+nl (list 1 2 3 `,x )
+nl (list 1 2 3 x )
+nl (list 1 2 3 ,@x )
+nl (+ 1 3 4 ,@x)
+(define q1x (lambda (a) (a))) 
+(define q2 q1x)
+((q2 /) (q2 14) (q2 2)) 
+(define q3 q1x)
+(define q4 q3)
+(define q2 q4)
+nl 
+((q2 +) (q2 28) (q2 2)(q3 2) (q4 45))
+"Lisp" notUsing
+"\nending lisp.cft\n" ddps
+2 + 7 assertStkChk // stack checking

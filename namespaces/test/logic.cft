@@ -1,0 +1,43 @@
+5
+Root.Int C
+// logic test
+Logic Bits
+: lt 1 2 < p ; lt 
+: lt2 1 2 > p ; lt2
+// ' lt2 wdiss
+
+: lnt ( n ) n 2 < p ; 1 lnt 3 lnt
+: lnt2 ( n ) n @ 2 < p ; 1 lnt2 3 lnt2
+// ' lnt wdiss
+
+: lnt3 ( n ) n 2 == p ; 1 lnt3 2 lnt3
+: lnt4 ( n ) n 2 != p ; 1 lnt4 2 lnt4
+// ' lnt4 wdiss
+nl
+: lnt5 ( n | m ) m 1 = n m == p ; 1 lnt5 2 lnt5
+: lnt5 ( n | m ) m 1 = n m <= p ; 1 lnt5 2 lnt5
+: lnt5 ( n | m ) m 1 = n m > p ; 2 lnt5 1 lnt5
+: lnt5 ( n | m ) m 1 = n m >= p ; 2 lnt5 1 lnt5
+: lnt5 ( n | m ) m 1 = m n != p ; 2 lnt5 1 lnt5
+// ' lnt6 wdiss
+nl
+: lt7 1 1 - not p ; lt7
+: lt7b 1 1 + not p ; lt7b
+: lt8 1 not p ; lt8
+: lt9 0 not p ; lt9
+: lt10 ( n ) n not p ; 1 lt10 0 lt10
+: tnot ( n -- n ) n @ not dup n store p ;
+' tnot wdiss
+1 tnot 0 _assert 
+1 not 0 _assert
+0 tnot 1 _assert
+: tnot2 ( n m | v -- v ) n @ m @ | not dup v store p ; // | : to get the compiler to not optimize 
+' tnot2 wdiss 
+: tnot3 ( n -- TOS ) n @ not dup p ;
+' tnot3 wdiss
+1 tnot3 0 _assert 
+0 0 tnot2 1 _assert 
+1 1 tnot2 0 _assert
+2 + 7 assertStkChk // stack checking
+
+

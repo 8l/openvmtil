@@ -1,0 +1,33 @@
+5
+#if  1
+: vbp ( | vb ) 
+    vb verbosity @ = 
+    verbosity 2 = 
+    vb @ p 
+    verbosity vb @ = 
+;
+vbp
+using 
+
+"printf" "/lib32/libc.so.6" dlsymWord c_prefix c_return
+' printf wdiss
+printf ( "\nHello world! = 0x%08x\n\n" 1234 ) 
+: tpf printf ( "\nHello world! = 0x%08x\n\n", 1234 ) p "characters printf-ed" ps nl ;
+' tpf wdiss
+tpf
+C_Syntax
+User
+Compiler
+: vckf ( n w ) 
+    { verbosity @ n @ > } { w @ wordRun } if2 
+;;
+: dbv2 dbgVerbosity 2 = ; dbv2
+: vckf1 ( w ) vckf ( 1 w @ _literal ) ;;
+
+vckf1 ( ' s ) 
+
+vckf1 ( vckf1 ( vckf1 ( ' tpf ) vckf1 ( ' vmem ) ' s  ) ' s )
+printf("\n%s\n\n","hello world!")//parse this!
+
+#endif
+2 + 7 assertStkChk // stack checking

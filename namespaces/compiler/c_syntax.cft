@@ -1,0 +1,114 @@
+5 
+// maybe we're shooting for a "smart syntactic language" that will parse "poetic" syntactic arrangements
+System Interpreter
+
+#if 1
+
+C
+int "printf" "/lib32/libc.so.6" dlsymWord c_prefix // c_return : not with current c_syntax
+int "strcmp" "/lib32/libc.so.6" dlsymWord c_prefix c_return
+int "sprintf" "/lib32/libc.so.6" dlsymWord c_prefix // c_return
+
+User
+c_syntaxOn
+#if 1
+typedef _CObj
+{
+    int hi ;
+    char chars [ 32 ] ;
+    int hey ;
+    int heey2 ;
+    //quad heey ;
+    int heey1 ;
+} cobj, CObj ;
+p ( CObj.size ) ;
+"chey" CObj new 
+chey.hi = 1234 ;
+chey.chars [2] = 255 ;
+//chey.heey = #x123456789abcdef ;  
+chey.heey1 = #x12345678 ; 
+#if 1
+chey.heey2 = chey.heey1 ; // #x12345678 ; 
+chey.hey = chey.heey2 ; // #x12345678 ;
+#else
+chey.heey2 = #x12345678 ; 
+chey.hey = #x12345678 ;
+#endif
+chey.chars [23] = 255 ;
+chey.chars [18] = #b10110 ; // #x16
+dump ( chey, cobj.size ) ; 
+p ( cobj.size ) ; 
+
+void
+chi ( chey0, d | a b c )
+{
+    c = 1 + 2 ;
+    b = c + 2 ;
+    a = b + c ;
+    p ( c ) ;
+    p ( b ) ;
+    p ( a ) ;
+    d = cobj.chey0.hey ;
+#if d: 0
+    d: sprintf ( cobj.chey0.chars, "\nhey = %d", d ) ;
+    sprintf ( cobj.chey0.chars, "\nhey = %d", cobj.chey0.hey ) ;
+#endif
+    printf ( "\n%x\n", d ) ;
+    printf ( "\n%x\n", cobj.chey0.hey ) ;
+    dump ( chey0, cobj.size ) ;
+}
+wdiss ( ' chi ); 
+chi ( chey, 7 ) ; pause
+#endif
+
+void
+interpret2 ( | atoken aword ) 
+{
+    tab () ; ps ( "interpret2 :> " ) ;
+    while ( 1 )
+    {   
+        //<dbg>
+        atoken = token () ;
+        if ( ! ( strcmp ( atoken, ";;" ) ) ) 
+        { 
+            return ; 
+        }
+        else
+        {
+            if ( atoken )
+            {       
+                //printf ( "\n\ttoken = %s\n", atoken ) ; 
+                aword = find ( atoken ) ;
+                if ( aword != 0 )
+                { 
+                    setupWordEval ( aword ) ;
+                    if ( ! ( compileMode_get ()  ) || ( ?immediate (aword ) ) )
+                    { 
+                        wordEval ( aword ) ; 
+                    } 
+                    else 
+                    { 
+                        _compileWord ( aword ) ;
+                    }
+                } 
+                else 
+                { 
+                    literalInterpret (atoken ) ;
+                } 
+            }       
+        }
+    }
+}
+wdiss ( ' interpret2 ) ;
+c_syntaxOff
+User
+void.interpret2 words
+: hi1 1 2 + p ; 
+: hey1 hi1 hi1 ; 
+: heey1 hey1 hey1 hey1 ;
+nl heey1 
+;; // code to exit interpret2
+
+#endif
+2 + 7 assertStkChk // stack checking
+

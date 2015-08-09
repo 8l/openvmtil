@@ -1,0 +1,11 @@
+Lisp
+( define f ( lambda ( x ) ( + x 1 ) ) ) 
+( f 2 )
+C Compiler Int
+: ofile ( | file input result )
+    input 0 =
+    file "namespaces/init.cft" fopen =
+    nl { result file @ input 1 fread = input @ emit } { result @ 1 == } doWhile 
+    file @ fclose
+;
+ofile

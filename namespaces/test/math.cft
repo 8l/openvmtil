@@ -1,0 +1,22 @@
+5
+"\nmath test\n" ddps
+
+Int
+: mt 6 ++ p ; mt
+: mt1 8 -- p ; mt1
+: mta 1 5 + ++ p ; mta
+: mt1a 9 1 - -- p ; mt1a
+: mt2 ( n ) n ++ n @ p ; 6 mt2
+: mt3 ( n ) n @ ++ n @ p ; 7 mt3 // n should not be affected by ++ 
+1 #if 
+C
+: t* ( a b -- TOS ) a @ b @ * ; 3 4 t* 12 _assert
+: t+ ( a b ) a @ b @ + p ; 3 4 t+ 
+: t* ( a b c d -- TOS ) a @ b @ c @ d @ * * * ; 
+// ' t* wdiss 
+1 2 3 4 t* 24 _assert
+: t+ ( a b c d -- TOS ) a @ b @ c @ d @ + + + ; 
+// ' t+ wdiss 
+1 2 3 4 t+ 10 _assert
+#endif
+2 + 7 assertStkChk // stack checking

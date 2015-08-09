@@ -1,0 +1,106 @@
+1 #if // old stuff 
+C Compiler Logic User
+
+: caseSwitchExample ( n ) 
+    nl
+    { 1 p } 1 case
+    { 2 p } 2 case
+    { 3 p } 3 case
+    n @ switch
+;
+2 caseSwitchExample 
+Compiler
+: attx 8 4 stk / p ;
+' attx wdiss
+attx
+
+: attx3 8 4 * 16 / 2 + 3 - dup p ;
+' attx3 wdiss
+attx3 1 == { nl "math optimization ok" ps nl } if1
+
+: attx2 d: ( n m ) 
+    nl "m = " ps m @ p 
+    nl "n = " ps n @ p nl
+    m @ n @ / dup p
+    m @ * dup p
+    n @ + dup p
+    m @ * dup p
+    n @ - dup p
+    nl p 
+;
+
+' attx2 wdiss
+8 4 attx2
+
+: attx5 ( n m )
+    m n / 
+    m * 
+    n + 
+    m * 
+    n - 
+    2 *
+    4 /
+    3 + 
+    8 -
+    nl p 
+;
+
+' attx5 wdiss
+8 4 attx5
+
+: attx6 ( n m )
+    m n / 
+    m * 
+    n + 
+    m - 
+    2 / 
+    2 *
+    2 -
+    2 + 
+    nl p 
+;
+
+' attx6 wdiss
+2 2 attx6
+
+: hi 1 2 + p ; inline
+: hey hi hi hi ; inline 
+: heey hey hey ;
+' heey wdiss
+// test for 
+/*
+    case ( OP_VAR << ( 2 * O_BITS ) | OP_FETCH << ( 1 * O_BITS ) | OP_UNORDERED ):
+    case ( OP_VAR << ( 2 * O_BITS ) | OP_FETCH << ( 1 * O_BITS ) | OP_ORDERED ):
+    case ( OP_VAR << ( 2 * O_BITS ) | OP_FETCH << ( 1 * O_BITS ) | OP_LOGIC ):
+*/
+{ (| n ) 1 n 1 = n @ + p } i 
+{ (| n ) 1 n 1 = n @ - p } i
+{ (| n ) 1 n 1 = n + p } i 
+{ (| n ) 1 n 1 = n - p } i
+#endif
+: atx (| n ) n 1 = n 3 <<= n @ p ; ' atx wdiss atx 
+: atx (| n ) n 1 = n 1 << p ; ' atx wdiss atx 
+: atx (| n ) n 1 = n 5 <<= n @ 3 >> p ; ' atx wdiss atx 
+
+var: JOY LINREC ;
+JOY @ #if "7 [null] [succ] [dup pred] [*] linrec." _joy ps nl #endif
+LINREC @ #if // there's a bug still in the internal linrec combinator
+t: null dup 0 == ;
+t: succ ++ ;
+t: pred -- ;
+7 { null } { succ } { dup pred } { * } linrec p
+7 { dup 0 == } { ++ } { dup -- } { * } linrec p 
+: fac { null } { succ } { dup pred } { * } linrec ;
+7 fac p
+: fac2 { dup 0 == } { ++ } { dup -- } { * } linrec ;
+7 fac2 p
+: fac { null } { succ } { dup pred } { * } linrec ;
+7 { null } { succ } { dup pred } { * } linrec p
+JOY @ #if "7 [null] [succ] [dup pred] [*] linrec." _joy ps #endif
+: fac2 { dup 0 == } { ++ } { dup -- } { * } linrec ;
+7 { dup 0 == } { ++ } { dup -- } { * } linrec p 
+7 { dup 0 == } { ++ } { dup -- } { * } linrec p 
+7 fac p 7 fac2 p
+// "qexp" ' fac2 alias
+// "fac2" ffx
+#endif

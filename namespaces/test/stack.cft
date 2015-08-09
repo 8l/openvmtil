@@ -1,0 +1,3 @@
+5
+" ab ( a b ) { a @ b @ + p } word
+2 + 7 assertStkChk // stack checking

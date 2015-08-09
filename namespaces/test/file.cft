@@ -1,0 +1,13 @@
+C Compiler Int Lexer
+: ofile ( | file input result )
+    input 0 =
+    file "namespaces/init.cft" fopen =
+    nl { result file @ input 1 fread = input @ emit } { result @ 1 == } doWhile 
+    file @ fclose
+;
+' ofile wdiss 
+ofile 
+: hi 1 2 + p ;
+: hey hi hi ;
+: heey hey hey ;
+heey

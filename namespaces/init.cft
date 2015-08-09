@@ -1,0 +1,14 @@
+5
+Root User
+doLisp 1 =
+doDemo 1 =
+
+: demo0 "namespaces/test/initTest.cft" include ;
+// { doDemo @ } { demo0 } if2
+doDemo @ { demo0 } if1
+ 
+: _doLisp "namespaces/test/dev0.cft" include  ;
+doLisp @ { _doLisp } if1
+"Lisp" notUsing
+
+2 + 7 assertStkChk // stack checking

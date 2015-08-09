@@ -1,0 +1,132 @@
+
+5
+decimal
+User
+C
+// demonstrate calling order of local variables
+: a123 ( one two three )
+
+    one @ p
+    two @ p
+    three @ p
+;
+1 2 3 a123 nl
+: a1234 ( one two three four )
+
+    one @ p
+    two @ p
+    three @ p
+    four @ p
+;;
+a1234 ( 1 2 3 4 )
+
+: hey ( n m | o q -- TOS )
+	nl "startHey" prints
+	o m @ = 	nl "o = " ps o @ print nl "m = " ps m @ print
+	q n @ =  	nl "q = " ps q @ print nl "n = " ps n @ print nl
+	n @ m @ o @ q @ + + + dup dup print 22 _assert
+	n @ m @ + o @ + q @ + dup print 22 _assert
+        nl "after hey" ps
+;
+// ' hey wdiss
+5 6 hey 
+: hey ( a b ) a @ b @ hey 22 _assert ; 5 6 hey
+
+: hey2 ( n m | o q )
+ 	nl "startHey2" prints
+	m @ o store     nl "o = " ps o @ print nl "m = " ps m @ print
+	n @ q store     nl "q = " ps q @ print nl "n = " ps n @ print nl
+	n @ m @ + o @ + q @ + print 
+        n @ m @ hey 
+        nl "afterHey2" prints nl
+;
+5 6 hey2 22 _assert
+
+nl "beforeHeey" prints nl
+
+: heey ( a b ) a @ b @ hey2 a @ b @ hey2 ;
+: heey2 ( a b ) a @ b @ heey a @ b @ heey ;
+: heeey2 ( a b ) a @ b @ heey2 a @ b @ heey2 ;
+: heeeey2 ( a b ) a @ b @ heeey2 a @ b @ heeey2 ;
+5 6 heey
+5 6 heey2
+5 6 heeeey2
+
+nl "afterHeey" prints nl
+
+1 #if
+hex
+Class DLLNode
+DLLNodeAlloc
+: tna2x ( t | t1 )
+        t1 t @ =  
+        nl "t = " ps t p nl "t @ = " ps t @ p nl "t1 @ = " ps t1 @ p nl "t1 = " ps t1 @ p
+        nl "done showing variables" ps nl
+	t1 . nodes [ 1 ].AfterReference 3 = 
+	t1 . nodes [ 3 ].BeforeReference 4 =
+	t1 . nodes [ 4 ].BeforeReference 5 =
+	t1 @ 32 dump 
+;
+
+"testA" DLLNodeAlloc new
+"testB" DLLNodeAlloc new
+nl "testA = " prints testA dup print nl tna2x
+testA 32 dump
+testA.nodes [ 1 ].AfterReference dup @ p p
+testA.nodes [ 3 ].BeforeReference dup @ p p
+
+"before test" nl ps nl
+testA.nodes [ 3 ].BeforeReference @ 4 using Logic.== { nl "array test ok" } { nl "array test error" } tf2 ps nl drop
+
+testA 32 dump
+testB.nodes [ 1 ].AfterReference 3 =
+testB.nodes [ 3 ].BeforeReference 4 =
+testB 32 dump
+#endif
+
+1 #if
+User
+hex
+: _localsT ( t | t1 )
+        t p
+        t @ p
+        t1 p
+        t1 @ p
+        t1 t @ =
+        t1 @ p
+;
+
+: localsT ( t | t1 )
+        t p
+        t @ p
+        t1 p
+        t1 @ p
+        t1 t @ =
+        t1 @ p
+        t @ _localsT
+        t1 @ _localsT
+;
+
+1 localsT
+#endif
+
+// nested namespaces test
+Combinators User
+: goedel { (| n ) n 1 = n @ 6 + p } ix { (| m ) m 3 = m @ 4 + p } ix ;
+: goedel2 { (| n ) n 1 = n @ 6 + p } ix { (| n ) n @ p n 3 = n @ 4 + p } ix ;
+
+: goedel4 (| n ) 
+    n 9 =
+    { 
+        (| n ) n @ p n 2 = n @ 2 _assert
+        { (| n ) n @ p n 3 = n @ 4 + 7 _assert } ix
+        n @ 6 + 8 _assert 
+    } ix
+    { (| n ) n @ p n 3 = n @ 4 + 7 _assert } ix 
+    n @ p
+;
+// ' goedel4 wdiss
+goedel4
+
+2 + 7 assertStkChk // stack checking
+

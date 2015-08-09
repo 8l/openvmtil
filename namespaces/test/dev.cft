@@ -1,0 +1,138 @@
+
+5
+optimizeOn inlineOn 
+// optimizeOff inlineOff
+// verbosity 2 = 
+Compiler Logic Int C User C
+var: facTest fibTest Dsp ;
+#if  0
+ * - tail recursion from http://c2.com/cgi/wiki?TailCallOptimization
+ * int factorial( int n )
+ {
+	int rec1 = 1;
+	while ( n >= 2 )
+		rec1 *= n--;
+	return rec1;
+ }
+: factorial ( n  | fac -- TOS ) 
+    fac 1 = 
+    { n @ 1 > } { n @ fac @ * fac store n -- } while 
+    fac @ 
+;
+#endif
+
+: qexp dup 0 == if{ ++ }else{ dup -- recurse * }fi ;
+:rec qexp2 dup 0 == ?< ++ >:< dup -- qexp2 * >? rec;
+
+: bexp ( n ) n @ 1 > if{ n @ dup -- recurse * }else{ 1 }fi ;
+: bexp2 ( n ) { n @ 1 > } { n @ dup -- recurse * } { 1 } ifElse ;
+: fac ( n  | rec1 -- TOS ) 
+    rec1 1 = 
+    { n @ 1 > } { n @ rec1 @ * rec1 store n -- } while 
+    rec1 @ 
+;
+// : bexp2 ( n | rec1 ) { n @ 1 <= } { 1 } { n @ dup -- recurse * } ifElse ;
+
+: sdbg ( j ) { stackDepth 20 > } { state regs nl "stackDepth = " ps stackDepth p nl hex { j stackDepth = } { j @ 0 > } { j -- } { p } for quit } if2 ;
+
+: _ifx ( w | j ) 
+    { j 1 = } { j @ 15 <= } { j ++ } 
+    {
+       // j @ w @ wordRun j @ p "." ps p ";" ps
+       j @ w @ wordRun drop // j @ p "." ps p ";" ps
+    }
+    for
+;
+// ' _ifx wdiss
+
+: iFactorialX ( n w | k ) { k 1 = } { k @ n @ <= } { k ++ } { w @ _ifx } for ; 
+
+: _ffx ( n w | t ) nl 7 w @ wordRun decimal p nl { t 0 = } { t @ n @ < } { t ++ } { 100000 w @ iFactorialX } for ;
+nl "ffx ... " ps nl
+: nlpsnl ( str n ) hex nl str @ ps n @ p nl ;;
+// "ffx" ( w ) { w dup @ find = w @ wdiss 3 w @ nlpsnl ( "w =" w @ ) _ffx } word
+// "ffx" ( w | d ) { d w @ find = d @ wdiss nlpsnl ( "word =" d @ ) 7 d @ _ffx } word
+: ffx ( w | d ) 1 ti d w @ find = d @ wdiss 3 d @ _ffx 1 time ;
+
+facTest 1 = fibTest 1 =
+
+#if ( facTest @ )
+"cfactorial" ffx
+"cfactorial2" ffx
+User "qexp" ffx
+C "bexp" ffx
+"bexp2" ffx
+C "qexp" ffx
+C "qexp2" ffx
+"cfactorial" ffx
+"cfactorial2" ffx
+"fac" ffx
+"factorial" ffx
+"cfactorial2" ffx
+"cfactorial3" ffx
+"factorial" ffx
+#endif
+
+#if ( fibTest @ )
+: tt ( | t ) t 6 = t ++ t @ p ;
+' tt dup source code dup wdis iax
+: _fibn ( n ) { n @ 2 <= } { n @  } { n @ -- recurse n @ 2 - recurse + } ifElse ;
+:rec _fib1 ( n ) { n @ 2 <= } { n @  } { n @ -- _fib1 n @ 2 - _fib1 + } ifElse rec;
+:rec _fib 
+    dup 2 <= 
+    if{ 
+    }else{ 
+        dup -- _fib swap 2 - _fib + 
+    }fi 
+rec;
+
+// :rec _fib2 dup 0 <= ?< drop 0 >:< dup 1 == ?< drop 1 >:< dup -- _fib2 swap 2 - _fib2 + >? >? rec;
+:rec _fib2 
+    dup 2 <= 
+    ?< 
+    >:< 
+        dup -- _fib2 swap 2 - _fib2 + 
+    >; 
+rec;
+
+:rec _fib3 
+    dup 2 <= 
+    ?< 
+    >:< 
+        dup -- _fib3 swap 2 - _fib3 + 
+    >; 
+rec;
+' _fib3 wdiss
+20 _fib3 p
+
+: fib  ( n ) 1 ti n @ _fib  p 1 time ;
+"fib1" ( n ) { 1 ti n @ _fib1 p 1 time } word
+: fib2 ( n ) { 1 ti n @ _fib2 p 1 time ;
+: fib3 ( n ) { 1 ti n @ _fib3 p 1 time ;
+: fibn ( n ) { 1 ti n @ _fibn p 1 time ;
+: Cfib ( n ) 1 ti n @ cfib  p 1 time ;
+: tfib ( n )  
+    nl hex Dsp p decimal nl "fibonacci" ps n @ p ":" ps nl 
+    "C -O3 : " ps n @ Cfib nl 
+    "locals fibn : " ps n @ fibn nl 
+    "locals fib1  : " ps n @ fib1 nl 
+    "no locals fib  : " ps n @ fib nl 
+    "no locals fib2 : " ps n @ fib2 nl
+    "no locals fib3 : " ps n @ fib3 
+;
+15 tfib 30 tfib 40 tfib // 45 tfib 
+: fibx ( n ) { n @ 0 >= } { n @ _fib p n -- } while ;
+: fibx2 ( n | m ) "fibonacci" ps n @ p ":" ps m 0 = { m @ n @ <= } { m @ _fib2 p m ++ } while ;
+// : fibx3 ( n | m ) "fibonacci" ps n @ p ":" ps m 0 = { m @ n @ <= } { m @ _fib3 p m ++ } while ;
+: fibx3 ( n ) "fibonacci" ps n @ p ":" ps { n @  } { n @ _fib3 p n -- } while ;
+// ' _fib wdiss
+' _fib2 wdiss
+// 40 fibx3 
+' _fibn wdiss
+Lisp (fib 20)
+"Lisp" notUsing
+#endif
+nl
+2 + 7 assertStkChk // stack checking
+// verbosity 1 =
+namespaceTreeWithWords

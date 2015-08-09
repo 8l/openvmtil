@@ -1,0 +1,5 @@
+#! cfrtil -s 
+verbosity 2 =
+Lisp
+( ( lambda ( x y ) ( + x y ) ) 3 4 ) 
+nl bye

@@ -1,0 +1,39 @@
+
+5 
+System Interpreter
+// : #! ' // xt@ compile ; // for script files with first line as "#! cfrtil -s"
+// : token { nextChar ' ' !=  } {  } 
+infixOn
+
+: interpretNextToken ( | atoken aword ) 
+    token atoken store 
+    { atoken @ != 0 }
+    {       
+        atoken @ find aword store 
+        { aword @ != 0 } 
+        { 
+            aword @ setupWordEval 
+            { ( compileMode_get not ) || ( ?immediate (aword @) ) }
+            { aword @ definition iax } 
+            { aword @ _compileWord }
+            ifElse
+        } 
+        { atoken @ literalInterpret } 
+        ifElse
+    }       
+    if
+;
+
+: interpret 
+    interpreterInit 
+    { interpreterIsDone == 0 } 
+    { 
+        interpretNextToken 
+    } 
+    while
+;
+"C_Combinators" notUsing
+infixOff
+
+2 + 7 assertStkChk // stack checking
+

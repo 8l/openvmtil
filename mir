@@ -1,0 +1,4 @@
+./m $1
+make install_1
+cfrtil
+

@@ -1,0 +1,70 @@
+5 
+// nb. some of the testing code is attempting to see if it can cause an error it is not necessarily meant to be exemplary 
+Int User
+: iinc "./init.cft" include ;
+: ia32 "namespaces/compiler/ia32.cft" include ; inline
+: interpT "namespaces/compiler/interpreter.cft" include ;
+: itest "namespaces/test/initTest.cft" include ;
+: dT "namespaces/test/dev.cft" include ; inline
+: dT2 "namespaces/test/dev2.cft" include ;
+: classTest "namespaces/test/classTest.cft" include ;
+: arrayTest "namespaces/test/arrayTest.cft" include ;
+: localsTest "namespaces/test/localsTest.cft" include ;
+: bigNumTest "namespaces/test/bigNum.cft" include ;
+: stackTest "namespaces/test/stack.cft" include ;
+: controlTest "namespaces/test/control.cft" include ;
+: objectTest "namespaces/test/dobject.cft" include ;
+: c_SyntaxTest "namespaces/compiler/c_syntax.cft" include ;
+: syntaxTest "namespaces/compiler/syntax.cft" include ;
+: sT stackTest ;
+: bT bigNumTest ;
+: locT localsTest ;
+: aT arrayTest ;
+: cT classTest ;
+: cntT controlTest ;
+: oT objectTest ;
+: cST c_SyntaxTest ;
+: test "namespaces/test/test.cft" include ;
+: dT0 "namespaces/test/dev0.cft" include ;
+: dT2 "namespaces/test/dev2.cft" include ;
+: dT3 "namespaces/test/dev3.cft" include ;
+: loT "namespaces/test/logic.cft" include ;
+: mT "namespaces/test/math.cft" include ;
+: fT "namespaces/test/file.cft" include ;
+: sT "namespaces/compiler/syntax.cft" include ;
+: sysT "namespaces/test/system.cft" include ;
+: lispTest "namespaces/test/lisp.cft" include ;
+: oldL "namespaces/test/oldLisp.cft" include ;
+: lT lispTest ;
+: test "namespaces/test/test.cft" include ;
+: testX cST ;
+: basicT cT aT loT bT locT mT oT ia32 cntT lT fT sT sysT interpT  ;
+: testBasic basicT ;
+: testAll testBasic testX ;
+//: testAll cT aT loT bT locT mT oT ia32 cntT lT fT sT cST ;
+: test testAll ;
+: dtestAll cT aT lT loT mT oT ia32 cntT ; // for stepping thru test
+: demo! sOn 5 itest ;
+: odemo sOff 5 itest ;
+: demo itest dT ;
+: test0 ia32 dT ; inline
+: test1 inlineOff optimizeOff test0 ;
+: aoTest odemo cntT ;
+: aTest demo cntT ;
+: tL lT dT0 ;
+: tL2 dT0 lT ;
+nl "before testAll" prints
+
+{ "testDone" find 0 == } { "testDone" var } if 
+ 
+"doTest" 1 const
+
+#if testDone @ 0 == doTest && 
+testDone 1 +=
+{ doTest } { testBasic } if 
+#endif
+nl "testDone =" ps testDone @ p nl // pause
+ 
+2 + 7 assertStkChk // stack checking
+"\nending initTest.cft\nstack is...\n" ddps s
+

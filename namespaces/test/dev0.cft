@@ -1,0 +1,166 @@
+
+5
+opOn // this currently requires the optimization to be on to compile correctly 
+// verbosity 2 = 
+// echoOn
+
+User
+"Experimental" namespace
+C Experimental Bits
+: ll ( dir ) "$ ls -al " dir @ strcat istring ;;
+: llc "$ ls -al " istring ;
+llc
+ll ( "/home" )
+
+// constant folding optimization test
+: tx 4 2 / 5 + ; tx 7 _assert
+// ' tx wdiss 
+Logic 
+: tx1 0 ! ! 8 2 / 2 / 3 & 4 | 1 + + ; tx1 7 _assert
+// ' tx1 wdiss
+
+// namespaceTreeWithWords
+
+C
+#if 0 // - tail recursion from http://c2.com/cgi/wiki?TailCallOptimization
+int factorial ( int n )
+{
+       int rec1 = 1;
+       while ( n >= 2 ) rec1 *= n--;
+       return rec1;
+}
+#endif
+
+: fac ( n  | rec1 -- TOS ) 
+    rec1 1 = 
+    { n @ 1 > } { n @ rec1 @ * rec1 store n -- } while 
+    rec1 @ 
+;
+// ' fac wdiss
+7 fac dup p 5040 _assert
+
+// doDemo @ #if
+#if 1
+state
+: factorial ( REG: n | EAX: rec -- EAX ) rec 1 = { n @ 1 > } { rec @ n @ * rec store n -- } while ;
+// d: _wdiss ( 0 tick factorial literal )
+7 factorial dup p 5040 "factorial" assert1
+#endif
+
+// nl location "\nstarting Lisp\n stack is ..." ddps s
+nl location "\nstarting Lisp ..." ddps s
+Lisp 
+( define g ( lambda ( a b c ) ( a b c))) 
+(g + 3 4 ) (g / 14 2 ) 
+(define q1x (/\ (a) (a))) 
+Compiler.' q1x wdiss
+
+((q1x /) 14 2)
+// pause
+(define h0 (lambda (a) (a)))
+((h0 /) 14 2)
+(t+ 1 2 3 1)
+// BigFloat
+(define average (/\ ( n0 n1 )(/ ( + n0 n1 ) 2 )))
+( average 52 102 )
+// TODO : somehow average is not working after startup ?
+(+ 1 6)
+// pause
+(define fib (lambda (n) (ifElse (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))
+(define fib2 (lambda (n) (ifElse (< n 2) n (+ (fib2 (- n 1)) (fib2 (- n 2))))))
+Compiler.' fib wdiss
+// pause
+(fib 20) (fib2 20)
+// pause
+(if* 1 7 2)
+(+ 2 5)
+
+(define g(/\(a b c)(a b c)))
+(g + 3 4 )(g / 14 2 )
+( define j ( lambda ( a b c ) ( + a b c)))
+( define h ( lambda ( a b c ) ( + a b c)))
+( define k ( lambda ( a b ) ( + a b )))
+nl
+( k ( j 1 2 3 ) ( h 2 3 66 ) ) // 77 ...
+( + ( k ( j 1 2 3 ) ( h 2 3 66 ) ) ( + 698 2 ) ) // 777
+( + ( k ( j 1 2 3 ) ( h 2 3 59 ) ) 7 ) // 77
+( g + ( k ( j 1 2 ( h 2 3 ( k 59 4 ) ) ) 6 ) 0 ) // 77
+// pause
+"\nbefore fib" ddps
+
+( - ( + 1 2 ( * 3 4 ) ( / 4 2 ) ( - 9 8 ) 10 770 787 34 ) 21 787 34 )  // == 777
+#endif
+1 #if // demo : interspersing C code with lisp compiled code
+C Compiler
+:rec _fib1 ( n ) { n @ 2 < } { n @  } { n @ -- _fib1 n @ 2 - _fib1 + } ifElse rec;
+// ' _fib1 wdiss
+20 _fib1 p
+#endif
+Lisp
+optimizeOff
+(define fibc (lambda ( n ) (ifElse (< n 2) n (+ (fibc (- n 1)) (fibc (- n 2))))))
+(fibc 20)
+optimizeOn
+(define fibco (lambda ( n ) (ifElse (< n 2) n (+ (fibco (- n 1)) (fibco (- n 2))))))
+// Compiler.' fibco wdiss // have to use 'tick' not ' - remember we are in the Lisp namespace
+// pause 
+(fibco 20)
+"\nafter fib" ddps nl
+
+#if 1 // testing
+doDemo @ #if
+Compiler C
+:rec _fib1 ( n ) { n @ 2 < } { n @  } { n @ -- _fib1 n @ 2 - _fib1 + } ifElse rec;
+// ' _fib1 wdiss
+ 20 _fib1 p
+: _fibn ( n ) { n @ 2 < } { n @  } { n @ -- recurse n @ 2 - recurse + } ifElse ;
+// ' _fibn wdiss
+20 _fibn p
+#endif
+
+Int
+Lisp
+(define fibc2 ( lambda ( n ) ( ifElse ( < n 2 ) n ( + ( fibc2 ( - n 1 ) ) ( fibc2 ( - n 2 ) ) ) ) ) )
+// ' fibc2 wdiss
+(fibc2 20)
+
+#endif // testing
+
+(define fibco1 (lambda (n ) (ifElse (< n 2) n (+ (fibco1 (- n 1)) (fibco1 (- n 2))))))
+// Compiler.' fibco1 wdiss
+(fibco1 20)
+
+(define x (7 8 9 45))
+(list 1 2 3 `x)
+(list 1 2 3 `,x )
+(list 1 2 3 x )
+(list 1 2 3 ,@x )
+(+ 1 3 4 ,@x) 
+(+ 1 3 4 `,@x) 
+(define alist (list 1 2 3 ,@x)) //pause
+
+//BigInt : TODO : BigInt/BigFloat can work 
+(define yfac (lambda (yy n) (if* (< n 2) 1 (* n (yy yy (- n 1)))))) // code from : http://www.newlisp.org/index.cgi?Y_Function
+// Compiler.' yfac wdiss
+(yfac yfac 10) nl
+(define yfacc (lambda (yyy n1) (if* (< n1 2) 1 (* n1 (yyy yyy (- n1 1)))))) 
+// Compiler.' yfacc wdiss
+(yfacc yfacc 10) nl
+(yfacc yfacc 7) nl
+(define x "let") (define a "the")
+nl '( Its a beautiful day dont let it get away )
+nl `( ,Its ,a ,beautiful ,day ,dont ,@x ,it ,get ,away )
+nl `( Its ,a beautiful day dont ,x it get away )
+nl `( Its 'a beautiful day dont ,x it get away )
+nl `( Its a beautiful day dont ,@x it get away )
+(define ff ( lambda (n) (+ n 1)))
+((/\ (x) (+ x 1)) 6 ) ((/\ (x) (+ x 1)) ((/\ (y) (+ y 2)) 4 ) )
+(ff 6)
+(average 12 2) 
+"Lisp" notUsing
+Lisp
+(average 12 2) 
+2 + 7 assertStkChk // stack checking
+"\nending Lisp\n stack is ..." ddps s
+// opOff
+// demo d: "bexp3" ffx

@@ -1,0 +1,232 @@
+5
+// Intel - InstructionSet-A-M-253666.pdf - section 2.1 :
+// -----------------------------------------------------------------------
+// instuction format ( in bytes )
+// prefixes  opcode  modRm   sib        disp   immediate
+//  0 - 4    1 - 3   0 - 1  0 - 1      0,1,4    0,1,4      -- number of bytes
+// -----------------------------------------------------------------------
+//   modRm byte ( bits )  mod 0 : no disp ;; mod 1 : 1 byte disp : mod 2 : 4 byte disp ;; mod 3 : just reg value
+//    mod     reg      rm
+//   7 - 6   5 - 3   2 - 0 
+//                   rm  4 - b100 => sib instead of ESP
+// -----------------------------------------------------------------------
+//  reg/rm codes :
+//  EAX 0, ECX 1, EDX 2, EBX 3, ESP 4, EBP 5, ESI 6, EDI 7
+// -----------------------------------------------------------------------
+//  bit positions encoding :  ...|7|6|5|4|3|2|1|0|  but nb. intel is little endian
+// -----------------------------------------------------------------------
+//  opCode direction bit 'd' is bit position 1 : 1 => rm/sib to reg ; 0 => reg to rm/sib -- for some instructions
+//  sign extend bit 's' is bit position 1 for some instructions
+//  operand size bit 'w' is bit position 0 for some instructions
+// -----------------------------------------------------------------------
+//       sib byte ( bits ) with rm 4 - b100
+//    scale  index   base
+//    7 - 6  5 - 3  2 - 0
+//    scale 0 : [index * 1 + base]
+//    scale 1 : [index * 2 + base]
+//    scale 2 : [index * 4 + base]
+//    scale 1 : [index * 4 + base]
+// -----------------------------------------------------------------------
+// intel syntax : opcode dst, src
+// att syntax   : opcode src, dst
+
+// note : x86-32 instruction format : || prefixes : 0-4 bytes | opCode : 1-3 bytes | mod : 0 - 1 byte | sib : 0 - 1 byte | disp : 0-4 bytes | immediate : 0-4 bytes ||
+// note : intex syntax  : instruction dst, src
+//        att   syntax  : instruction src, dst
+// note : rm : reg memory - the register which contains the memory address in mod instructions
+
+// cfrTil uses intel syntax convention
+
+Compiler Compiling C Asm
+
+: :asm ' {| compileWord sourceCodeOn ; immediate  
+"asm;" ' |} alias immediate
+// ' :asm winfo // pause
+// ' asm; winfo // pause
+// : ;; ' ;; compileWord ":asm" find wdiss ; immediate
+// ' ;; wdiss pause
+"IA32" namespace
+IA32
+"namespaces/compiler/asmConstants.cft" include
+hex
+infixOn
+Logic Bits  IA32 
+ 
+: _Compile_ModRm ( mod reg rm ) ( ( mod @ << 6 ) | ( ( reg @ & 7 ) << 3 ) | ( rm @ & 7 ) ) 1,  ;; 
+// ' _Compile_ModRm wdiss // pause
+
+: _Compile_Imm ( imm isize )
+    { isize @ == 1 } { imm @ 1, } if 
+    { isize @ == 4 } { imm @ 4, } if 
+;;
+
+: _Compile_OpCode ( opCode ) 
+    { opCode @ > 255 } { opCode @ 2, } { opCode @ 1, } ifElse
+;; 
+
+: _Compile_ModRmDisp ( mod reg rm disp )
+    { mod @ != REG } 
+    { 
+        { disp @ == 0 } { mod = 0 } 
+        {
+            { disp <= #Xff } { mod = MEM8 } { mod = MEM32 } ifElse
+        }
+        ifElse
+    }
+    if
+    _Compile_ModRm (  mod @, reg @, rm @ )
+    { mod @ == 1 } { disp @ 1, } if
+    { mod @ == 2 } { disp @ 4, } if
+;; 
+
+// no sib yet -- sib has not been used here yet !
+: _Compile_InstructionX86 ( opCode modFlag mod reg rm disp imm isize )
+    _Compile_OpCode ( opCode @ ) 
+    { modFlag @ } { _Compile_ModRmDisp ( mod @, reg @, rm @, disp @ ) } if
+    { ( imm @ ) || ( isize @ ) } { _Compile_Imm ( imm @, isize @ ) } if
+;;
+
+: _Compile_X86_OpModRegRmDisp ( opCode mod reg rm disp )
+    _Compile_InstructionX86 ( opCode @, 1, mod @, reg @, rm @, disp @, 0, 0 ) 
+;;
+
+: _Compile_X86_OpModRegRm ( opCode mod reg rm )
+    _Compile_InstructionX86 ( opCode @, 1, mod @, reg @, rm @, 0, 0, 0 ) 
+;;
+
+: _Compile_Test (  mod, reg, rm, disp, imm )
+ // _Compile_InstructionX86 ( opCode modFlag mod reg rm disp imm isize )
+    _Compile_InstructionX86 ( #xf7, 1, mod @, reg @, rm @, disp @, imm @, CELL ) 
+;;
+
+: _Compile_Test_Imm (  mod, rm, disp, imm )
+    _Compile_Test (  mod @, 0, rm @, disp @, imm @ )
+;;
+
+: _Compile_IncDec_Reg ( op, reg )
+    op += ( reg @ )  
+    // op ( reg @ ) += // TODO : research : why doesn't this work 
+    op @ 1, 
+;;
+: _Compile_Move ( toRegOrMem mod reg rm disp | opCode ) 
+    { toRegOrMem @ == REG } { opCode = #x8b } { opCode = #x89 } ifElse
+    _Compile_X86_OpModRegRmDisp ( opCode @, mod @, reg @, rm @, disp @ ) 
+;;
+
+: _Compile_Move_DataStackN_ToReg ( reg n ) _Compile_Move ( REG, 0, reg @, DSP, n @ * CELL ) ;; 
+: _Compile_MoveTOS_ToEAX () _Compile_Move_DataStackN_ToReg ( EAX, 0 ) ;; // _Compile_Move ( REG, 0, EAX, DSP, 0 ) 
+
+: _Compile_Move_Reg_ToDataStackN ( n reg ) _Compile_Move ( MEM, 1, reg @, DSP, n @ * CELL ) ;; 
+
+// group1 : ADD OR ADC SBB AND_OPCODE SUB XOR CMP : with immediate data
+: _Compile_Group1_Immediate ( code mod rm disp imm iSize | opCode )
+    // #x80 is the base opCode for this group of instructions 
+    // 1000 00sw 
+    opCode = #x80
+    { ( iSize @ > BYTE ) || ( imm @ > #xff ) } 
+    { 
+        opCode |= 1
+        // iSize = CELL
+    }
+    { 
+        { ( iSize @ <= BYTE ) || ( imm @ < #x100 ) } { opCode |= 3 } if
+    }
+    ifElse
+    // we need to be able to set the size so we can know how big the instruction will be in eg. CompileVariable
+    // otherwise it could be optimally deduced but let caller control by keeping operandSize parameter
+    // some times we need cell_t even though a byte would work
+    _Compile_InstructionX86 ( opCode @, 1, mod @, code @, rm @, disp @, imm @, iSize @ ) 
+;;
+// ' _Compile_Group1_Immediate wdiss pause
+
+: _Compile_CALL_EAX _Compile_X86_OpModRegRm ( #xff, 3, 2, 0 ) ;; 
+
+: _Compile_CALL_Reg ( reg ) _Compile_X86_OpModRegRm ( #xff, 3, 2, reg @ ) ;; 
+
+: _Compile_ADDI_DSP ( imm ) _Compile_Group1_Immediate ( ADD, REG, DSP, 0, imm @, 1 ) ;; 
+
+: _Compile_SUBI_DSP ( imm ) _Compile_Group1_Immediate ( SUB, REG, DSP, 0, imm @, 1 ) ;; 
+
+: _Compile_CMP_REG_IMM ( reg, imm, isize ) _Compile_Group1_Immediate ( CMP, REG, reg @, 0, imm @, isize @ ) ;; 
+
+: Compile_Stack_Push_EAX ()
+    _Compile_ADDI_DSP ( CELL ) 
+    _Compile_Move_Reg_ToDataStackN ( 0, EAX ) 
+;; 
+
+: Compile_Stack_Pop_EAX ()
+    _Compile_Move_DataStackN_ToReg ( EAX, 0 ) 
+    _Compile_SUBI_DSP ( CELL ) 
+;; 
+
+Combinators
+: iax
+    :asm
+    Compile_Stack_Pop_EAX () 
+    _Compile_CALL_Reg ( EAX ) 
+    asm; 
+;
+' iax wdiss // pause 
+: qeval
+    stk iax
+;
+' qeval wdiss // pause
+
+User
+: stest
+    :asm
+    _Compile_MoveTOS_ToEAX ( ) 
+    _Compile_Move_DataStackN_ToReg ( EAX, 0 ) 
+    Compile_Stack_Push_EAX ( ) 
+    _Compile_SUBI_DSP ( CELL ) 
+    asm;
+;
+' stest wdiss // pause // this is purposefully funky code for testing
+
+nl "ia32 test" ps "ok" dup ' ps xt@ qeval "ok" "error" assert1s 
+Stack
+: ndup 
+    :asm
+    _Compile_MoveTOS_ToEAX ( )
+    _Compile_SUBI_DSP ( CELL ) 
+    _Compile_Move_DataStackN_ToReg ( ECX, 0 )
+    "start" label 
+    _Compile_Test_Imm ( REG, EAX, 0, -1 )
+    // _Compile_Test ( REG, 0, ECX, 0, -1 )
+    // _Compile_CMP_REG_IMM ( EAX, 0, CELL )  
+    "end" 0 EQ jcc
+    _Compile_ADDI_DSP ( CELL ) 
+    _Compile_Move_Reg_ToDataStackN ( 0, ECX ) 
+    _Compile_IncDec_Reg ( DEC, EAX ) 
+    "start" goto
+    "end" label // above jcc to Here
+    asm;
+;
+' ndup wdiss // pause
+
+#if 1
+Asm
+// following intel conventions in the naming : insn dst, src
+// move mem to reg 
+: MOVLrm ( reg, ptr, n )
+    // _Compile_Move ( toRegOrMem mod reg rm disp ) 
+    _Compile_Move ( REG, MEM, reg @, ptr @, n @ ) 
+;;
+// move mem to reg : 32 bit offset
+: MOVLrm ( reg, ptr, n )
+    // _Compile_Move ( toRegOrMem mod reg rm disp ) 
+    _Compile_Move ( REG, MEM, reg @, ptr @, n @ * CELL ) 
+;;
+: MOVmr ( ptr, n, reg )
+    // _Compile_Move ( toRegOrMem mod reg rm disp ) 
+    _Compile_Move ( MEM, MEM32, reg @, ptr @, n @ * CELL ) 
+;;
+// move mem to reg
+: MOVrr ( dstReg, srcReg )
+    // _Compile_Move ( toRegOrMem mod reg rm disp | opCode ) 
+    _Compile_Move ( REG, REG, dstReg @, srcReg @, 0 ) 
+;;
+#endif
+
+infixOff
+2 + 7 assertStkChk // stack checking

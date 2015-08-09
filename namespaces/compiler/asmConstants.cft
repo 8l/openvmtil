@@ -1,0 +1,43 @@
+5 
+hex
+// asm constants
+// mod values
+"REG" 3 const  
+"MEM8" 1 const
+"MEM32" 2 const
+"MEM" 0 const
+// registers
+"EAX" 0 const 
+"ECX" 1 const 
+"EDX" 2 const 
+"EBX" 3 const 
+"ESP" 4 const 
+"EBP" 5 const 
+"ESI" 6 const
+"EDI" 7 const 
+"DSP" ESI const 
+
+// ttt codes
+"BELOW" 1 const 
+"EQUAL" 2 const
+"EQ" 2 const
+"ZERO" 2 const
+"Z" 2 const
+"BE" 3 const
+"NA" 3 const
+"LESS" 6 const
+"LE" 7 const
+"NG" 7 const
+
+"ADD" 0 const
+"SUB" 5 const
+"CMP" 7 const
+"BYTE" 1 const
+"CELL" 4 const
+"N" 1 const // used with JCC n/ttt notation
+
+// opCodes
+"INC" 0x40 const
+"DEC" 0x48 const
+
+2 + 7 assertStkChk // stack checking

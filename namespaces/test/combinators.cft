@@ -1,0 +1,16 @@
+5
+// !! nb : this toolkit doesn't work at all yet - it's just an outline !!
+COMBINATOR_TOOKIT 0 =
+COMBINATOR_TOOKIT @ #if
+Combinators
+: for ( a b c d ) 
+    4 beginCombinator 
+    a compileBlock 
+    "start" label 
+    b compileBlock d compileBlock c compileBlock
+    "start" goto 
+    4 endCombinator 
+; 
+#endif
+
+2 + 7 assertStkChk // stack checking

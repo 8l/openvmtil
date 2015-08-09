@@ -1,0 +1,26 @@
+5
+"\ndynamic object test\n" ddps
+DObject 
+"DO_Experimental" namespace
+DO_Experimental
+"o1" new
+"o12" new
+o1.x 123 =
+o1.x @ 123 "object new slot test : " assert2
+"o2" o1 clone
+o2.x @ 123 "object clone test : " assert2
+o2.ay 2 = 
+"o3" o2 clone 
+o3.ay @ 2 "object clone test2 : " assert2
+o3.x @ 123 "object clone test3 : " assert2
+"o4" o3 clone 
+o4.x @ 123 "object clone test4 : " assert2
+o4.ay @ 2 "object clone test5 : " assert2
+: ott o1.x.zzz 456 = o1.x.zzz @ ;
+ott 456 "object compile test6 : " assert2
+: ott2 o1.x.xxy store o1.x.zzx  o1.x.xxy @ = o1.x.zzx @  ;
+987 dup ott2 "object compile test7 : " assert2    
+: ott3 ( n -- TOS ) o1.x.xxy n @ = o1.x.zzx  o1.x.xxy @ = o1.x.zzx @  ;
+123987 dup ott3 "object compile test8 : " assert2    
+"DO_Experimental" notUsing
+2 + 7 assertStkChk // stack checking

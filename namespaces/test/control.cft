@@ -1,0 +1,79 @@
+5
+#if 1
+Root 
+"Control" namespace
+Control Bits
+
+// d: "agoto" { "here" label { kbhit dup p } { "end" goto } { 1 p "here" goto } ifElse "end" label 2 p } word
+// " agoto { " here label { kbhit dup p } { " end goto } { 1 p " here goto } ifElse " end label 2 p } word
+// "aret" { "here" label { kbhit } { return } { 1 p "here" goto } ifElse 2 p } word
+// " aret { " here label { kbhit } { return } { 1 p " here goto } ifElse 2 p } word
+// x 10 = "abrkcon" { { { kbhit 27 == } { break } { 1 p continue } ifElse 2 p } loop } word
+x 10 = : abrkcon { { x @ 0 == } { break } { 1 p x 1 -= continue } ifElse 2 p } loop ;
+x 10 = : abrk0 { { x @ p x @ 0 == } { break } { 1 p x 1 -= continue } ifElse 2 p } loop ;
+: abrk { { kbhit 0 > } { break } { 1 p } ifElse  } loop ;
+: abrk2 { { { kbhit 27 == } { break } { 1 p } ifElse 2 p } loop 5 p ;
+: abrk3 { 1 } { 1 p } { 0 p } ifElse 2 p ;
+: abrk4 { { kbhit 0 > } { break } { continue } ifElse  } loop nl "ok" ps ;
+: abrk5 { { kbhit 0 > } { return } { continue } ifElse  } loop nl "ok" ps ;
+: abrk6 x 10 = nl "Hit any key : " ps { { kbhit 0 > } { { x @ 0 == } { break } { x 1 -= } ifElse decimal x @ p } { continue } ifElse  } loop nl "ok" ps ;
+ 
+: ct0 ( w | j ) 
+    nl "ct0 : " ps nl
+    { {| "hi" label |} "ct0 before goto/label works" ps nl return } _
+    { j 1 = } { j @ 17 <= } { j ++ }
+    {
+       w @ p j @ p 
+       { w @ j @ == } { nl "testing : goto/label ->" ps {| "hi" goto |} } { "continuing" ps } ifElse
+    }
+    for
+;
+
+: ct1 ( w | j ) 
+    nl "ct1 : " ps nl
+    { j 1 = } { j @ 17 <= } { j ++ }
+    {
+       w @ p j @ p
+       { w @ j @ == } { nl "testing : goto/label1 ->" ps {| "hi" goto |} } { "continuing" ps } ifElse
+    }
+    for
+    { { { {| "hi" label |} "ct1 after nested goto/label1 works" ps nl return } _ } _ } _
+;
+
+: ct2
+    nl "ct2 : " ps nl
+    { nl "testing : goto/label2 ->" ps {| "hi" goto |} } ix
+    { {| "hi" label |} "ct2 after goto/label2 works" ps nl return } _
+;
+
+: hic2 ( n ) 
+    nl "hic2 : start " ps nl
+    n @ p n @ ct0 n @ ct1 n @ ct2 n @ p 
+    nl "hic2 : done " ps nl
+;
+7 hic2
+
+Compiler Logic User
+
+: caseSwitchExample ( n ) 
+    cr
+    { 1 p } 1 case
+    { 2 p } 2 case
+    { 3 p } 3 case
+    { 7 p } 7 case
+    n @ switch
+; 
+
+// ' caseSwitchExample wdiss
+7 caseSwitchExample
+
+: t0 1 2 > if_ 1 p jmpHere 2 p ; 
+: t1 1 2 > if_ 1 p _else_ 2 p _fi ; 
+// : t2 1 2 > if_ 1 p jmp jmpHere 2 p _fi jmpHere ; 
+: t3 1 2 > if_ 1 p _else_ 2 p _fi ; 
+// : t3 1 2 Asm.test {| N ZERO |} jcc 1 p _else_ 2 p _fi ; 
+// ' t3 wdiss
+// t3
+#endif 
+
+2 + 7 assertStkChk // stack checking

@@ -1,0 +1,5 @@
+#! /usr/local/bin/cfrtil -s 
+Lisp
+verbosity 1 =
+( ( lambda ( x y ) ( + x y ) ) 3 4 ) 
+nl bye

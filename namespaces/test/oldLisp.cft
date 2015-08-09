@@ -1,0 +1,33 @@
+1  #if // old lisp - not presently working nor am i interested to maintain it at this point : working in version 0.739.004 and before, maybe a little after
+// this is basically lisp in forth and forth in lisp -- now i am more interested in compiling lisp to native code
+saveVerbosity verbosity @ =
+Lisp
+d: : tl1 ( Printf "\n%s 0x%08x 0x%08x %s\n", "hello world!", 132345, 13, "Hey all tl1!\n" ) ; 
+Compiler.' tl1 wdiss 
+tl1
+verbosity 2 =
+( Printf "\n%s verbosity = %d 0x%08x 0x%08x %s\n", "hello world!", ( [ verbosity @ ] ), 132345, 10, "\tHey all 1!\r" ) 
+verbosity 1 =
+hex
+: tl2 ( Printf "\n%s verbosity = %d 0x%08x 0x%08x %s\n", "hello world!", ( [ verbosity @ ] ), 132345, 10, "\tHey all tl2!\r" ) ;
+' tl2 wdiss 
+tl2 
+( Printf "\t\tHey all3!\rHey all4 2!\n" ) 
+// User
+decimal
+( + 1 2 4 70 ) nl 
+Lisp
+'( 1 2 ( 3 4 ) 5 6 ( 7 ( 8 ( 9 ) 10 11 ) ( ( ( ( 12 ) ) ) ) 13 ( 14 ) ) 15 ( 16 ( 17 ( 18 ) ) ) ) 
+( Printf "\n0x%08x", 7 ) 
+: hi1 ( Printf "\nHello world! 0x%08x\n", 7 ) ;
+: hi2 ( Printf "\n%s verbosity = %d %d %d %s\n", "hello world!", ( [ verbosity @ ] ), 132345, 10, "\n\tHey all hi2!\r" ) ;
+verbosity 2 =
+hi1 hi2 
+
+: tl3 d: ( Printf "\n%s + -- 7 == %d -- %d %d %s\n", "hello world!", ( [ 3 4 + ] ), 132345, 10, "\n\tHey all 3! tl3\r" )  ;
+' tl3 wdiss
+tl3
+( Printf "\n%s + -- 7 == %d -- %d %d %s\n", "hello world!", ( [ 3 4 + dup ] ), 132345, 10, "\n\tHey all 3!\n" ) 7 _assert
+verbosity saveVerbosity @ = 
+#endif // old lisp
+

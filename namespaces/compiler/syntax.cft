@@ -1,0 +1,29 @@
+5
+: _assert _assert s ;
+s
+User 
+infixOn
+: hi ( | x -- x ) x = ( 2 + ( 3 * 4 ) ) x @ p ; 
+' hi wdiss
+hi 14 _assert
+s
+: hi1 ( a b | x -- x ) x = 2 + ( ( a @ ) / ( b @ ) ) * ( 3 * 4 ) ; 
+' hi1 wdiss
+6 3 hi1 dup p 48 _assert
+10 5 hi1 dup p 48 _assert
+: hi2 ( a b | x -- x ) ( x = ( ( ( ( 2 + ( ( a @ ) / ( b @ ) ) ) * ( ( 3 * 4 ) ) ) ) ) ) ; 
+' hi2 wdiss
+6 3 hi2 dup p 48 _assert
+10 5 hi2 dup p 48 _assert
+: h3 ( a b | x -- x ) ( x = ( ( ( ( 2 + ( ( 3 * 4 ) ) - ( ( a @ ) / ( b @ ) ) ) ) ) ) ) ; 
+' h3 wdiss
+6 3 h3 dup p 12 _assert
+10 5 h3 dup p 12 _assert
+: h4 ( a b | x -- x ) x = ( 20 - ( 3 * 4 ) - ( ( a @ ) / ( b @ ) ) ) ; 
+' h4 wdiss
+6 3 h4 dup p 6 _assert
+10 5 h4 dup p 6 _assert
+
+infixOff
+2 + 7 assertStkChk // stack checking
+s

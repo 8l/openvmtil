@@ -1,0 +1,92 @@
+
+"namespaces/test/classTest.cft" include 
+5
+Int
+
+Class
+decimal
+DLLNode
+
+"DLLNodeAlloc" class :{ DLLNode nodes [ 32 ] };
+
+"testna" DLLNodeAlloc new
+cr decimal "testna size = " prints testna size @ Io.print cr
+"DLLNode size = " prints DLLNode size @ Io.print cr 
+"DLLNodeAlloc size = " prints DLLNodeAlloc size @ Io.print cr 
+
+testna.nodes [ 1 ].AfterReference  1 =
+testna.nodes [ 2 ].BeforeReference  2 =
+testna 32 dump
+
+"DLLNodeAlloc4" class :{ DLLNode nodes [ 32 ] [ 4 ] };
+"DLLNodeAlloc4 size = " prints DLLNodeAlloc4 size @ Io.print cr 
+"testna4" DLLNodeAlloc new
+"testna5"
+{
+    testna4.nodes [ 1 ] [ 0 ].AfterReference  1 =
+    testna4.nodes [ 2 ] [ 0 ].BeforeReference  2 =
+    testna4.nodes [ 1 ] [ 0 ] 32 dump
+    testna4.nodes [ 1 ] [ 1 ].AfterReference  1 =
+    testna4.nodes [ 2 ] [ 1 ].BeforeReference  2 =
+    testna4.nodes [ 1 ] [ 1 ] 32 dump
+    testna4.nodes [ 1 ] [ 2 ].AfterReference  1 =
+    testna4.nodes [ 2 ] [ 2 ].BeforeReference  2 =
+    testna4.nodes [ 1 ] [ 2 ] 32 dump
+} word
+testna5
+
+"testna2" DLLNodeAlloc new
+"tna"
+{
+	testna2.nodes [ 1 ].AfterReference 1 = 
+	testna2.nodes [ 2 ]. BeforeReference 2 = 
+	testna2 32 dump 
+} word
+// ' tna wdiss
+tna
+
+C
+"tna2" ( objPtr ) 
+{
+        objPtr @ cr hp cr
+        objPtr . nodes [ 1 ].AfterReference 1 =
+	objPtr . nodes [ 2 ].BeforeReference 2 =
+	objPtr @ 32 dump
+} word
+
+"tna2a" ( objPtr ) 
+{
+	objPtr . nodes [ 1 ].AfterReference 1 =
+	objPtr . nodes [ 2 ].BeforeReference 2 =
+	objPtr @ 32 dump
+} word
+"testn4" DLLNodeAlloc new
+testn4 tna2a 
+s
+
+"tna3" ( testn4 )
+{
+	testn4.nodes [ 1 ].AfterReference 1 =
+	testn4.nodes [ 2 ].BeforeReference 2 =
+	testn4 32 dump
+} word
+
+"testn5" DLLNodeAlloc new
+testn5 tna3
+
+testn5 hp
+testn5 tna2
+
+"tnax1" ( objPtr ) "tnax1 pushed" ps cr
+{
+        objPtr @ hp
+	objPtr.nodes[3].AfterReference 1 =
+	objPtr.nodes[4].BeforeReference 2 =
+	objPtr @ 32 dump
+} word
+// ' tnax1 @ wdis
+"testnx" DLLNodeAlloc new dup p tnax1
+
+2 + p
+drop // somewhere here is an extra pointer left on the stack; drop it for now till we spend time to debug
+s
